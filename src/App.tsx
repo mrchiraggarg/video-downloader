@@ -4,32 +4,36 @@ import DownloadForm from './components/DownloadForm';
 import Features from './components/Features';
 import SupportedPlatforms from './components/SupportedPlatforms';
 import Footer from './components/Footer';
-import { downloadFile, generateSampleFile, getVideoTitle } from './utils/downloadUtils';
+import { videoDownloadService } from './services/videoDownloadService';
 
 function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleDownload = async (url: string, format: string, quality: string) => {
     setIsLoading(true);
     setDownloadStatus('processing');
+    setErrorMessage('');
 
     try {
-      // Simulate processing time
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Generate filename
-      const videoTitle = getVideoTitle(url);
-      const extension = format === 'mp3' ? 'mp3' : 'mp4';
-      const filename = `${videoTitle}_${quality}.${extension}`;
-      
-      // Generate sample file (in real implementation, this would fetch the actual video)
-      const fileBlob = generateSampleFile(format, quality);
-      
-      // Trigger download
-      downloadFile(fileBlob, filename);
-      
-      setDownloadStatus('success');
+      // Validate URL
+      if (!isValidVideoUrl(url)) {
+        throw new Error('Please enter a valid video URL from a supported platform');
+      }
+
+      // Attempt to download the video
+      const result = await videoDownloadService.downloadVideo({
+        url: url.trim(),
+        format: format as 'mp3' | 'mp4',
+        quality
+      });
+
+      if (result.success) {
+        setDownloadStatus('success');
+      } else {
+        throw new Error(result.error || 'Download failed');
+      }
       
       // Reset status after 5 seconds
       setTimeout(() => {
@@ -37,12 +41,31 @@ function App() {
       }, 5000);
     } catch (error) {
       console.error('Download error:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
       setDownloadStatus('error');
       setTimeout(() => {
         setDownloadStatus('idle');
+        setErrorMessage('');
       }, 5000);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const isValidVideoUrl = (url: string): boolean => {
+    try {
+      const urlObj = new URL(url);
+      const supportedDomains = [
+        'youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com',
+        'facebook.com', 'twitter.com', 'x.com', 'vimeo.com',
+        'dailymotion.com', 'twitch.tv'
+      ];
+      
+      return supportedDomains.some(domain => 
+        urlObj.hostname.includes(domain) || urlObj.hostname.includes(`www.${domain}`)
+      );
+    } catch {
+      return false;
     }
   };
 
@@ -78,6 +101,7 @@ function App() {
               onDownload={handleDownload}
               isLoading={isLoading}
               downloadStatus={downloadStatus}
+              errorMessage={errorMessage}
             />
           </div>
 
