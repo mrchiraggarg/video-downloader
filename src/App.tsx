@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Header from './components/Header';
 import DownloadForm from './components/DownloadForm';
 import Features from './components/Features';
 import SupportedPlatforms from './components/SupportedPlatforms';
 import Footer from './components/Footer';
+import { downloadFile, generateSampleFile, getVideoTitle } from './utils/downloadUtils';
 
 function App() {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,13 +14,20 @@ function App() {
     setIsLoading(true);
     setDownloadStatus('processing');
 
-    // Simulate download process
     try {
-      // In a real application, this would make an API call to your backend
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // For demonstration purposes, we'll simulate a successful download
-      console.log(`Downloading ${url} as ${format} in ${quality} quality`);
+      // Generate filename
+      const videoTitle = getVideoTitle(url);
+      const extension = format === 'mp3' ? 'mp3' : 'mp4';
+      const filename = `${videoTitle}_${quality}.${extension}`;
+      
+      // Generate sample file (in real implementation, this would fetch the actual video)
+      const fileBlob = generateSampleFile(format, quality);
+      
+      // Trigger download
+      downloadFile(fileBlob, filename);
       
       setDownloadStatus('success');
       
@@ -28,6 +36,7 @@ function App() {
         setDownloadStatus('idle');
       }, 5000);
     } catch (error) {
+      console.error('Download error:', error);
       setDownloadStatus('error');
       setTimeout(() => {
         setDownloadStatus('idle');
