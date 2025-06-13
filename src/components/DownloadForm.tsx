@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { Download, Link, Music, Video, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Download, Link, Music, Video, Loader2, CheckCircle, AlertCircle, Info } from 'lucide-react';
 
 interface DownloadFormProps {
   onDownload: (url: string, format: string, quality: string) => void;
   isLoading: boolean;
   downloadStatus: 'idle' | 'processing' | 'success' | 'error';
+  errorMessage?: string;
 }
 
-const DownloadForm: React.FC<DownloadFormProps> = ({ onDownload, isLoading, downloadStatus }) => {
+const DownloadForm: React.FC<DownloadFormProps> = ({ 
+  onDownload, 
+  isLoading, 
+  downloadStatus, 
+  errorMessage 
+}) => {
   const [url, setUrl] = useState('');
   const [format, setFormat] = useState('mp4');
   const [quality, setQuality] = useState('720p');
@@ -28,9 +34,27 @@ const DownloadForm: React.FC<DownloadFormProps> = ({ onDownload, isLoading, down
     }
   };
 
+  const getSupportedPlatforms = () => [
+    'YouTube', 'TikTok', 'Instagram', 'Facebook', 'Twitter/X', 
+    'Vimeo', 'Dailymotion', 'Twitch'
+  ];
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+        {/* Supported platforms info */}
+        <div className="mb-6 p-4 bg-blue-50/50 rounded-lg border border-blue-200/50">
+          <div className="flex items-start space-x-2">
+            <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm text-blue-800 font-medium mb-1">Supported Platforms:</p>
+              <p className="text-xs text-blue-700">
+                {getSupportedPlatforms().join(', ')}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* URL Input */}
           <div className="space-y-2">
@@ -43,7 +67,7 @@ const DownloadForm: React.FC<DownloadFormProps> = ({ onDownload, isLoading, down
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://youtube.com/watch?v=... or any video URL"
+                placeholder="https://youtube.com/watch?v=... or any supported video URL"
                 className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-700 placeholder-gray-400"
                 required
               />
@@ -142,7 +166,14 @@ const DownloadForm: React.FC<DownloadFormProps> = ({ onDownload, isLoading, down
           {downloadStatus === 'error' && (
             <div className="flex items-center space-x-2 text-red-600 bg-red-50 py-3 px-4 rounded-lg">
               <AlertCircle className="w-5 h-5" />
-              <span>Download failed. Please check the URL and try again.</span>
+              <span>{errorMessage || 'Download failed. Please check the URL and try again.'}</span>
+            </div>
+          )}
+
+          {downloadStatus === 'processing' && (
+            <div className="flex items-center space-x-2 text-blue-600 bg-blue-50 py-3 px-4 rounded-lg">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Fetching video information and preparing download...</span>
             </div>
           )}
         </form>
