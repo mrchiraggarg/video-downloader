@@ -135,7 +135,7 @@ const DownloadForm: React.FC<DownloadFormProps> = ({ onDownload, isLoading, down
           {downloadStatus === 'success' && (
             <div className="flex items-center space-x-2 text-green-600 bg-green-50 py-3 px-4 rounded-lg">
               <CheckCircle className="w-5 h-5" />
-              <span>Download completed successfully!</span>
+              <span>Download started! Check your downloads folder.</span>
             </div>
           )}
 
